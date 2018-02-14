@@ -81,7 +81,7 @@ int main() {
       double imag = (y - IMAGE_HEIGHT / 2.0) * pHeight  ;
       int value = mandelbrot(real, imag);
       vector<int> v = getColor(value);
-      of <<  v[0]  << " " << v[1] << " " << v[2] << " ";
+      //of <<  v[0]  << " " << v[1] << " " << v[2] << " ";
       //of << value << " ";
     }
   }

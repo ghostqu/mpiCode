@@ -15,7 +15,7 @@ private:
   int nameLen;
   const int MAX = 127;
   const int IMAGE_WIDTH = 10000;
-  const int IMAGE_HEIGHT = 8000;
+  const int IMAGE_HEIGHT = 6000;
   const double xMin = -2.5;
   const double xMax = 1.5;
   const double yMin = -2.0;
@@ -31,6 +31,9 @@ public:
   }
   
   void run() {
+    double totaltime = 0;
+    if(worldRank == 0);
+     totaltime -= MPI_Wtime();
     int totalNum = IMAGE_WIDTH * IMAGE_HEIGHT;
     int* task = nullptr;
     int rangeNum = totalNum / worldSize;
@@ -41,40 +44,44 @@ public:
 	task[i * 2] =  rangeNum * i;
 	task[i * 2 + 1] = rangeNum * (i + 1);
       }
-      //task[worldsize * 2 - 1] = totalNum; 
     }
     curStart = (int*)malloc(sizeof(int) * 2);
     MPI_Scatter(task, 2, MPI_INT, curStart, 2, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // cout << processorName << curStart[0] << " " << curStart[1] << endl;
     
-    int* res = (int*)malloc(sizeof(int) * rangeNum);
-    int j = 0;
-    for(int i = curStart[0]; i < curStart[1]; i++) {
-      res[j++] = mandelbrot((i % IMAGE_WIDTH - IMAGE_HEIGHT / 2.0) * pHeight, (i / IMAGE_WIDTH - IMAGE_WIDTH / 2.0) *  pWidth);
+    
+    int* res = (int*)malloc(sizeof(int) * rangeNum * 3);
+    for(int i = curStart[0], j = 0; i < curStart[1]; i++, j+=3) {
+      int value = mandelbrot((i % IMAGE_WIDTH - IMAGE_HEIGHT / 2.0) * pHeight, (i / IMAGE_WIDTH - IMAGE_WIDTH / 2.0) *  pWidth);
+      getColor(res[j], res[j + 1], res[j + 2], value);
+      //cout << task[i] << endl;
+      //cout << res[j] << " " <<  res[j + 1] << " " << res[j + 2] << endl; 
     }
 
-    
+     
     if(worldRank != 0) task = nullptr;
-    if(worldRank == 0) task = (int*)malloc(sizeof(int) * totalNum);
+    if(worldRank == 0) task = (int*)malloc(sizeof(int) * totalNum * 3);
     
-    MPI_Gather(res, rangeNum, MPI_INT, task, rangeNum, MPI_INT, 0, MPI_COMM_WORLD);
-    //task[0] = -1;
-    //task[totalNum - 1] = -1;
+    MPI_Gather(res, rangeNum * 3, MPI_INT, task, rangeNum * 3, MPI_INT, 0, MPI_COMM_WORLD);
     
+    if(worldRank == 0) {
+      totaltime += MPI_Wtime();
+      cout << totaltime << endl;
+    }
+    /*
     if(worldRank == 0) {
       ofstream of("mandelbrot.ppm");
       of << "P3 " << IMAGE_WIDTH << " " << IMAGE_HEIGHT << " " << 255 << " " ;
-      for (int i = 0; i < totalNum; i++) {
-	  vector<int> v = getColor(task[i]);
-	  of <<  v[0]  << " " << v[1] << " " << v[2] << " ";
+      for (int i = 0; i < totalNum * 3; i++) {
+
+	of << task[i] << " ";
       }
-      //cout << "the result is " << res << endl;
+      
     }
-    
+    */
   }
-  vector<int> getColor(int iterations) {
-    int r, g, b;
+  void getColor(int &r, int &g, int &b, int iterations) {
+    
     
     if (iterations == -1) {
       r = 0;
@@ -105,11 +112,7 @@ public:
 	r = 0;
       }
     }
-    vector<int> v;
-    v.push_back(r);
-    v.push_back(g);
-    v.push_back(b);
-    return v;
+    return ;
   }
   int mandelbrot(double startReal, double startImag) {
     double zReal = startReal;

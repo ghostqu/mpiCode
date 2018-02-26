@@ -13,8 +13,8 @@ private:
   int worldRank;
   char processorName[MPI_MAX_PROCESSOR_NAME];
   int nameLen;
-  //int* rgb;
   const int MAX = 127;
+  //int rgb[MAX];
   const int IMAGE_WIDTH = 10000;
   const int IMAGE_HEIGHT = 8000;
   const double xMin = -2.5;
@@ -23,6 +23,22 @@ private:
   const double yMax = 2.0;
   const double pWidth = (xMax - xMin) / IMAGE_WIDTH;
   const double pHeight = (yMax - yMin) / IMAGE_HEIGHT;
+  int mandelbrot(double startReal, double startImag) {
+    double zReal = startReal;
+    double zImag = startImag;
+    
+    for (int counter = 0; counter < MAX; ++counter) {
+      double r2 = zReal * zReal;
+      double i2 = zImag * zImag;
+      if (r2 + i2 > 4.0) {
+	return counter;
+      }
+      zImag = 2.0 * zReal * zImag + startImag;
+      zReal = r2 - i2 + startReal;
+    }
+    return MAX;
+  }
+
 public:
   WorldManager() {
     MPI_Init(nullptr, nullptr);
@@ -30,7 +46,11 @@ public:
     MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
     MPI_Get_processor_name(processorName, &nameLen);
   }
-  
+  void makeColorMap() {
+    for (int i = 0; i <= MAX; i++) {
+      // getColor(res[j], res[j + 1], res[j + 2], value);
+    }
+  }
   void run() {
     double totaltime = 0;
     if(worldRank == 0);
@@ -39,6 +59,7 @@ public:
     int* task = nullptr;
     int rangeNum = totalNum / worldSize;
     int* curStart = nullptr;
+    
     if(worldRank == 0) {
       task = (int*)malloc(sizeof(int) * worldSize * 2);
       for(int i = 0; i < worldSize; i++) {
@@ -48,23 +69,21 @@ public:
     }
     curStart = (int*)malloc(sizeof(int) * 2);
     MPI_Scatter(task, 2, MPI_INT, curStart, 2, MPI_INT, 0, MPI_COMM_WORLD);
-
     
+    //makeColorMap();
     
     int* res = (int*)malloc(sizeof(int) * rangeNum * 3);
     for(int i = curStart[0], j = 0; i < curStart[1]; i++, j+=3) {
       int value = mandelbrot((i % IMAGE_WIDTH - IMAGE_HEIGHT / 2.0) * pHeight, (i / IMAGE_WIDTH - IMAGE_WIDTH / 2.0) *  pWidth);
+      //      res[j] = rgb[value];
       getColor(res[j], res[j + 1], res[j + 2], value);
-      //cout << task[i] << endl;
-      //cout << res[j] << " " <<  res[j + 1] << " " << res[j + 2] << endl; 
     }
 
-     
+    
     if(worldRank != 0) task = nullptr;
-    if(worldRank == 0) task = (int*)malloc(sizeof(int) * totalNum * 3);
+    if(worldRank == 0) task = (int*)malloc(sizeof(int) * 16);
     
     MPI_Gather(res, rangeNum * 3, MPI_INT, task, rangeNum * 3, MPI_INT, 0, MPI_COMM_WORLD);
-    
     if(worldRank == 0) {
       totaltime += MPI_Wtime();
       cout << totaltime << endl;
@@ -82,8 +101,6 @@ public:
     
   }
   void getColor(int &r, int &g, int &b, int iterations) {
-    
-    
     if (iterations == -1) {
       r = 0;
       g = 0;
@@ -113,23 +130,8 @@ public:
 	r = 0;
       }
     }
-    return ;
   }
-  int mandelbrot(double startReal, double startImag) {
-    double zReal = startReal;
-    double zImag = startImag;
-    
-    for (int counter = 0; counter < MAX; ++counter) {
-      double r2 = zReal * zReal;
-      double i2 = zImag * zImag;
-      if (r2 + i2 > 4.0) {
-	return counter;
-      }
-      zImag = 2.0 * zReal * zImag + startImag;
-      zReal = r2 - i2 + startReal;
-    }
-    return MAX;
-  }
+  
 
   ~WorldManager() {
     MPI_Finalize();

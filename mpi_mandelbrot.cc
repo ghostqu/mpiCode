@@ -145,6 +145,7 @@ public:
   }
 
   ~WorldManager() {
+    delete[] rgb;
     MPI_Finalize();
   }
 };

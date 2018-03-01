@@ -1,4 +1,4 @@
-10000 * 8000
+10000 * 8000 //
 yifan@dov2:~/mpiCode$ mpirun -n 1 -f host ./a.out
 6.45872
 yifan@dov2:~/mpiCode$ mpirun -n 2 -f host ./a.out

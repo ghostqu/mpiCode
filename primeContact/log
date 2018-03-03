@@ -1,0 +1,25 @@
+with thread
+yifan@dov2:~/mpiCode/primeContact$ time ./a.out 1000
+56
+
+real	0m0.025s
+user	0m0.005s
+sys	0m0.005s
+yifan@dov2:~/mpiCode/primeContact$ time ./a.out 10000
+284
+
+real	0m0.059s
+user	0m0.009s
+sys	0m0.033s
+yifan@dov2:~/mpiCode/primeContact$ time ./a.out 100000
+1641
+
+real	0m0.157s
+user	0m0.018s
+sys	0m0.120s
+yifan@dov2:~/mpiCode/primeContact$ time ./a.out 1000000
+10432
+
+real	0m3.880s
+user	0m0.687s
+sys	0m2.843s

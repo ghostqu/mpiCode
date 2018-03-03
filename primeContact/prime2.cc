@@ -1,0 +1,134 @@
+#include<iostream>
+#include<thread>
+#include<cmath>
+#include<vector>
+using namespace std;
+class Prime {
+private:
+  char* seive;
+  const int CPU_CACHE = 1024 * 32; // The l1 cache of CPU, use ls cpu to check
+  uint32_t seiveSize;
+  uint32_t count;
+  uint64_t start, end;
+public:
+  Prime(uint64_t start, uint64_t end): start(start), end(end) {
+    count = 0;
+    seiveSize = (uint32_t)(sqrt(end));
+    //cout << "size " << seiveSize << endl;;
+    seive = new char[seiveSize];
+    //char* p = seive;
+    seive[0] = seive[1] = 0;
+    for(int i = 2; i < seiveSize; i++) {
+      *(seive + i) = 1;
+    }
+  }
+  void seiveThread() {
+    const uint32_t size = (uint32_t)(sqrt(seiveSize));
+    for(uint32_t i = 4; i <= seiveSize; i+=2) { // get rid of all even numbers
+      *(seive + i) = 0;
+    }
+    for(uint32_t i = 3; i <= size; i+=2) {
+      if(*(seive + i)) {
+	int next = i << 1;
+	for(int j = i * i; j <= size; j += next) {
+	  *(seive + j) = 0;
+	}
+      }	
+    }
+    vector<thread> v(4);
+    for(uint32_t i = 3; i <= size;) {
+      for(uint32_t j = 0; j < 1; j++, i+=2) {
+	while(i <= seiveSize && *(seive + i) == 0) i += 2;
+	thread t(&Prime::seiveThreadSingle, this, i);
+	  t.join();
+	  //v.push_back(t);
+	
+      }
+      //for(auto& t : v) t.join();
+    }
+  }
+  void seiveThreadSingle(uint32_t p) {
+    uint32_t next = p << 1;
+    for(uint32_t i = p * p; i <= seiveSize; i += next) {
+      if(*(seive + i)) *(seive + i) = 0;
+    }
+    //cout << p << endl;
+  }
+  void seiveSingle() {
+    for(int i = 4; i <= seiveSize; i+=2) { // get rid of all even numbers
+      *(seive + i) = 0;
+    }
+    for(int i = 3; i <= seiveSize; i+=2) { // just check the odd numbers
+      if(*(seive + i)) {
+	int next = i << 1; // this is i * 2
+	for(int j = i * i; j <= seiveSize; j += next) {
+	  *(seive + j) = 0;
+	}
+      }
+    }
+  }
+  int countP() {
+    for(int i = 0; i < seiveSize; i++) {
+      //cout << (int)(*(seive + i))  << " ";
+      if(*(seive + i)) {
+	//cout << i << " ";
+	count++;
+      }
+      //return count;
+    }
+    return count;
+  }
+  ~Prime() {
+    delete[] seive;
+  }
+};
+int count(uint64_t size) {
+  int count = 0;
+  char* arr = new char[size + 1];
+  for(uint64_t i = 0; i <= size; i++) arr[i] = 0;
+  arr[1] = 1;
+  arr[0] = 1; //0, 1 are not prime number
+  for(uint64_t i = 2; i < size + 1; i++) {
+    if(arr[i] == 0) // if i is a prime
+      for(uint64_t j = i * i; j < size + 1; j += i) {
+	arr[j] = 1;
+      }
+  }
+  for(uint64_t i = 0; i < size + 1; i++) {
+    if(arr[i] == 0) {
+      count++; // if arr[i] == 0 i is a prime
+      //cout << i << " ";
+
+    }
+  }
+  cout << endl;
+  delete[] arr;
+  return count;
+}
+int main(int args, char** arg) {
+  uint64_t start = 0;
+  uint64_t end = 0;
+  int test = 0;
+  if(args == 2) {
+    end = atol(arg[1]);
+  } else if(args == 3) {
+    start = atol(arg[1]);
+    end = atol(arg[2]);
+  } else {
+    
+    start = atol(arg[1]);
+    end = atol(arg[2]);
+    test = atoi(arg[3]);
+    cout << "Not a correct input!" << endl;
+  }
+  if(test == 0) {
+    Prime p(0, end * end);
+    p.seiveThread();
+    cout << p.countP() << endl;
+    //cout << count(end) << endl;
+  } else {
+    cout << count(end) <<endl;
+  }
+  return 0;
+}
+

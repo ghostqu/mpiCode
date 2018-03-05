@@ -6,7 +6,6 @@ using namespace std;
 class Prime {
 private:
   char* seive;
-  const int CPU_CACHE = 1024 * 32; // The l1 cache of CPU, use ls cpu to check
   uint32_t seiveSize;
   uint32_t count;
   uint64_t start, end;
@@ -29,27 +28,30 @@ public:
     }
     for(uint32_t i = 3; i <= size; i+=2) {
       if(*(seive + i)) {
-	int next = i << 1;
-	for(int j = i * i; j <= size; j += next) {
-	  *(seive + j) = 0;
-	}
-      }	
-    }
-    vector<thread> v(4);
-    for(uint32_t i = 3; i <= size;) {
-      for(uint32_t j = 0; j < 1; j++, i+=2) {
-	while(i <= seiveSize && *(seive + i) == 0) i += 2;
-	thread t(&Prime::seiveThreadSingle, this, i);
-	  t.join();
-	  //v.push_back(t);
-	
+        int next = i << 1;
+        for(int j = i * i; j <= size; j += next) {
+          *(seive + j) = 0;
+        }
       }
+    }
+    uint32_t times = 2;
+    thread v[2];
+    for(uint32_t i = 3; i <= size;) {
+      for(uint32_t j = 0; j < 2; j++, i+=2) {
+        while(i <= seiveSize && *(seive + i) == 0) i += 2;
+        v[j] = thread(&Prime::seiveThreadSingle, this, i, times);
+	times = i;
+        //t.join();
+	//v.push_back(t);
+      }
+      v[0].join();
+      v[1].join();
       //for(auto& t : v) t.join();
     }
   }
-  void seiveThreadSingle(uint32_t p) {
-    uint32_t next = p << 1;
-    for(uint32_t i = p * p; i <= seiveSize; i += next) {
+  void seiveThreadSingle(uint64_t p, uint32_t t) {
+    uint64_t next = i * p;// p << 1;
+    for(uint64_t i = p * p; i <= seiveSize; i += next) {
       if(*(seive + i)) *(seive + i) = 0;
     }
     //cout << p << endl;
@@ -60,10 +62,10 @@ public:
     }
     for(int i = 3; i <= seiveSize; i+=2) { // just check the odd numbers
       if(*(seive + i)) {
-	int next = i << 1; // this is i * 2
-	for(int j = i * i; j <= seiveSize; j += next) {
-	  *(seive + j) = 0;
-	}
+        int next = i << 1; // this is i * 2
+        for(int j = i * i; j <= seiveSize; j += next) {
+          *(seive + j) = 0;
+        }
       }
     }
   }
@@ -115,7 +117,6 @@ int main(int args, char** arg) {
     start = atol(arg[1]);
     end = atol(arg[2]);
   } else {
-    
     start = atol(arg[1]);
     end = atol(arg[2]);
     test = atoi(arg[3]);

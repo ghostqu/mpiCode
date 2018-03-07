@@ -87,11 +87,11 @@ public:
       for (; n <= high; n += 2)
 	if (sieve[n - low]) // n is a prime
 	  //cout << n << " ";
-	   xxx++;
+	  xxx++;
       //cout << low << endl;
       // cout << endl;
     }
-     cout << xxx << endl;
+    cout << xxx << endl;
   }
   void seiveThreadSingle(uint64_t p, uint32_t t) {
     uint64_t next = p * t;// p << 1;

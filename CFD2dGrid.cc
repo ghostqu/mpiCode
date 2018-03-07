@@ -47,7 +47,6 @@ public:
   void specPoint(uint32_t i, uint32_t j) const {
     cout <<  g[i*cols + j] << '\n';
   }
-  
   void diffuse() {
     for(int i = 0; i < rows; i++) {
       for(int j = 0; j < cols; j++) {
@@ -64,9 +63,8 @@ public:
     double* temp = g;
     g = gNext;
     gNext = temp;
-    
   }
-  friend ostream& operator << (ostream& s, const Grid2d& grid);  
+  friend ostream& operator << (ostream& s, const Grid2d& grid);
 };
 
 ostream& operator << (ostream& s, const Grid2d& grid){
@@ -75,7 +73,7 @@ ostream& operator << (ostream& s, const Grid2d& grid){
       s << '\n';
     s << grid.g[p] << '\t';
   }
-  return s << '\n';  
+  return s << '\n';
 }
 
 
@@ -83,7 +81,7 @@ ostream& operator << (ostream& s, const Grid2d& grid){
 
 int main() {
   Grid2d grid(10, 10);
-  // cout << grid; 
+  // cout << grid;
   grid.startPoint(0,0,5);
   grid.startPoint(9,9,5);
   cout << grid;
@@ -92,10 +90,8 @@ int main() {
     grid.diffuse();
     cout << grid << endl;
   }
- 
   /*
   g.printInitGrid();
   g.printGrid();
   g.printFinalGrid();*/
-  
 }

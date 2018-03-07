@@ -37,42 +37,42 @@ void segmented_sieve(int64_t limit)
   std::vector<int64_t> indexes;
 
   for (int64_t low = 0; low <= limit; low += segment_size)
-  {
-    std::fill(sieve.begin(), sieve.end(), true);
-
-    // current segment = [low, high]
-    int64_t high = std::min(low + segment_size - 1, limit);
-    int64_t sqrt_high = (int64_t) std::sqrt(high);
-
-    // generate sieving primes using simple sieve of Eratosthenes
-    for (; i <= sqrt_high; i += 2)
-      if (is_prime[i])
-        for (int64_t j = i * i; j <= sqrt; j += i)
-          is_prime[j] = false;
-
-    // initialize sieving primes for segmented sieve
-    for (; s <= sqrt_high; s += 2)
     {
-      if (is_prime[s])
-      {
-         primes.push_back(s);
-        indexes.push_back(s * s - low);
-      }
-    }
+      std::fill(sieve.begin(), sieve.end(), true);
 
-    // segmented sieve
-    for (std::size_t i = 0; i < primes.size(); i++)
-    {
-      int64_t j = indexes[i];
-      for (int64_t k = primes[i] * 2; j < segment_size; j += k)
-        sieve[j] = false;
-      indexes[i] = j - segment_size;
-    }
+      // current segment = [low, high]
+      int64_t high = std::min(low + segment_size - 1, limit);
+      int64_t sqrt_high = (int64_t) std::sqrt(high);
 
-    for (; n <= high; n += 2)
-      if (sieve[n - low]) // n is a prime
-        count++;
-  }
+      // generate sieving primes using simple sieve of Eratosthenes
+      for (; i <= sqrt_high; i += 2)
+	if (is_prime[i])
+	  for (int64_t j = i * i; j <= sqrt; j += i)
+	    is_prime[j] = false;
+
+      // initialize sieving primes for segmented sieve
+      for (; s <= sqrt_high; s += 2)
+	{
+	  if (is_prime[s])
+	    {
+	      primes.push_back(s);
+	      indexes.push_back(s * s - low);
+	    }
+	}
+
+      // segmented sieve
+      for (std::size_t i = 0; i < primes.size(); i++)
+	{
+	  int64_t j = indexes[i];
+	  for (int64_t k = primes[i] * 2; j < segment_size; j += k)
+	    sieve[j] = false;
+	  indexes[i] = j - segment_size;
+	}
+
+      for (; n <= high; n += 2)
+	if (sieve[n - low]) // n is a prime
+	  count++;
+    }
 
   std::cout << count << " primes found." << std::endl;
 }

@@ -13,6 +13,19 @@ private:
   uint32_t count;
   uint64_t start, end;
   // vector<uint64_t> prime;
+  uint64_t findMinIndex(uint64_t index, uint64_t ss) {
+    uint64_t n = index * index;
+    uint64_t step;
+    while(n < ss) {
+      step = index << 1;
+      while(n + step < ss) {
+	n += step;
+	step = step << 1;
+      }
+      n += index << 1;
+    }
+    return n;
+  }
 public:
   Prime(uint64_t start, uint64_t end): start(start), end(end) {
     count = 0;
@@ -53,43 +66,49 @@ public:
       v[1].join();     
     }
     
-    uint64_t segmentSize =  L1D_CACHE_SIZE;
+    uint64_t segmentSize = seiveSize < L1D_CACHE_SIZE? seiveSize : L1D_CACHE_SIZE;
     vector<char> sieve(segmentSize);
     vector<int64_t> primes;
     vector<int64_t> indexes;
     uint64_t low = 0;
-    uint64_t s = 3, n =3;
+    uint64_t n = 3;
     
     for(uint64_t i = 3; i < seiveSize; i += 2) {
       if(*(seive + i)) {
 	primes.push_back(i);
-	indexes.push_back(i * i - low);
+	indexes.push_back(findMinIndex(i, start));
+	
       }
     }
-    cout << segmentSize << endl;
+    //cout << segmentSize << endl;
     uint64_t xxx = 1;
     for( ; low <= end; low += segmentSize) {
-      std::fill(sieve.begin(), sieve.end(), true);
-
+      fill(sieve.begin(), sieve.end(), true);
       // current segment = [low, high]
-      int64_t high = std::min(low + segmentSize - 1, end);
-      int64_t sqrt_high = (int64_t) std::sqrt(high);
-      
+      uint64_t high = min(low + segmentSize - 1, end);
+      //uint64_t sqrt_high = (uint64_t) sqrt(high + low);
+      //cout << endl;
+      //cout << low << endl;
       // segmented sieve
-      for (std::size_t i = 0; i < primes.size(); i++)
+      uint64_t nextPrime;
+      for (uint32_t i = 0; i < primes.size(); i++)
 	{
-	  int64_t j = indexes[i];
-	  for (int64_t k = primes[i] * 2; j < segmentSize; j += k)
+	  uint64_t j = indexes[i];
+	  //cout << primes[i] << flush;
+	  //uint64_t j = findMinIndex(primes[i], low) - low; //indexes[i];
+	  
+	  //cout << j << " " << flush;
+	  for (int64_t k = (primes[i] << 1); j < segmentSize; j += k)
 	    sieve[j] = false;
 	  indexes[i] = j - segmentSize;
 	}
 
       for (; n <= high; n += 2)
 	if (sieve[n - low]) // n is a prime
-	  //cout << n << " ";
+	  //	  cout << n << " ";
 	  xxx++;
       //cout << low << endl;
-      // cout << endl;
+      //cout << endl;
     }
     cout << xxx << endl;
   }

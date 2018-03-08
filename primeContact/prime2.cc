@@ -22,7 +22,7 @@ private:
 	n += step;
 	step = step << 1;
       }
-      n += index << 1;
+      n += (index << 1);
     }
     return n;
   }
@@ -70,54 +70,43 @@ public:
     vector<char> sieve(segmentSize);
     vector<int64_t> primes;
     vector<int64_t> indexes;
-    uint64_t low = 0;
-    uint64_t n = 3;
+    uint64_t low = start % 2 == 0? start + 1 : start;
+    uint64_t n = low;
     
     for(uint64_t i = 3; i < seiveSize; i += 2) {
       if(*(seive + i)) {
 	primes.push_back(i);
-	indexes.push_back(findMinIndex(i, start));
-	
+	indexes.push_back(findMinIndex(i, low) - low);
+	//	cout << i << " " << start << endl;
+	//cout << findMinIndex(i, start) << endl;
       }
     }
     //cout << segmentSize << endl;
     uint64_t xxx = 1;
     for( ; low <= end; low += segmentSize) {
       fill(sieve.begin(), sieve.end(), true);
-      // current segment = [low, high]
       uint64_t high = min(low + segmentSize - 1, end);
-      //uint64_t sqrt_high = (uint64_t) sqrt(high + low);
-      //cout << endl;
-      //cout << low << endl;
-      // segmented sieve
       uint64_t nextPrime;
       for (uint32_t i = 0; i < primes.size(); i++)
 	{
 	  uint64_t j = indexes[i];
-	  //cout << primes[i] << flush;
-	  //uint64_t j = findMinIndex(primes[i], low) - low; //indexes[i];
-	  
-	  //cout << j << " " << flush;
 	  for (int64_t k = (primes[i] << 1); j < segmentSize; j += k)
 	    sieve[j] = false;
 	  indexes[i] = j - segmentSize;
 	}
-
       for (; n <= high; n += 2)
 	if (sieve[n - low]) // n is a prime
-	  //	  cout << n << " ";
-	  xxx++;
-      //cout << low << endl;
-      //cout << endl;
+	  cout << n << " ";
+	  //xxx++;
     }
-    cout << xxx << endl;
+    //cout << xxx << endl;
   }
   void seiveThreadSingle(uint64_t p, uint32_t t) {
-    uint64_t next = p * t;// p << 1;
+    //used last prime to avoid conflict
+    uint64_t next = p * t;
     for(uint64_t i = p * p; i <= seiveSize; i += next) {
       *(seive + i) = 0;
     }
-    //cout << p << endl;
   }
   void seiveSingle() {
     for(int i = 4; i <= seiveSize; i+=2) { // get rid of all even numbers
@@ -186,7 +175,7 @@ int main(int args, char** arg) {
     cout << "Not a correct input!" << endl;
   }
   if(test == 0) {
-    Prime p(0, end);
+    Prime p(start, end);
     p.seiveThread();
     //cout << p.countP() << endl;
     //cout << count(end) << endl;

@@ -26,42 +26,15 @@ private:
     }
     return n;
   }
-  uint64_t findMinIndex2(uint64_t p, uint64_t s) {
-    s = p * p > s ? p * p : s;
-    uint64_t n = (s + p - 1) / p;
-    int digit = n % 10;
-    switch(n) {
-    case 1:
-      n += (digit <= 7) ? 7 - digit : 17 - digit;
-      break;
-    case 3:
-      n += (digit <= 9) ? 9 - digit : 19 - digit;
-      break;
-    case 7:
-      n += (digit <= 1) ? 1 - digit : 11 - digit;
-      break;
+  uint64_t findMinIndex2(uint64_t index, uint64_t ss) {
+    uint64_t n = index * index;
+    uint64_t step = ss / index;
+    if(n < ss) { 
+      n = step * index;
+      if(n % 2 == 0) n += index;
+      while(n < ss) n += 2 * index;
     }
     return n;
-  }
-  bool findLowerBoundary(uint64_t& index) {
-    if(index < 100000) return false;
-    cout << index << endl;
-    uint64_t temp = index, prefix = 0;
-    int a = 0, i = 0;
-    while(temp > 0) {
-      if(temp % 10 == 2) {
-	prefix = temp;
-	a = i;
-      }
-      temp /= 10;
-      i++;
-    }
-    if(a < 5) return false;
-    uint64_t zeros = (uint64_t)(pow(10, a));
-    cout << zeros << endl;
-    cout << a << endl;
-    index = (prefix + 1) * zeros + 7;
-    return true;
   }
 public:
   Prime(uint64_t start, uint64_t end): start(start), end(end) {
@@ -102,38 +75,27 @@ public:
       v[0].join();
       v[1].join();     
     }
-    seive[5] = 0;
+    
     uint64_t segmentSize = seiveSize < L1D_CACHE_SIZE? seiveSize : L1D_CACHE_SIZE;
     vector<char> sieve(segmentSize);
     vector<int64_t> primes;
     vector<int64_t> indexes;
-    uint64_t low = findLowerBoundary(start);
+    uint64_t low = start % 2 == 0? start + 1 : start;
     uint64_t n = low;
     
     for(uint64_t i = 3; i < seiveSize; i += 2) {
       if(*(seive + i)) {
 	primes.push_back(i);
 	indexes.push_back(findMinIndex(i, low) - low);
+	uint64_t kk, bb;
+	kk = findMinIndex(i,start);
+	bb = findMinIndex2(i, start);
+	cout << i << " the index is ";
+	cout << kk  << endl;
+	cout << "Another way's result " << bb << " TorF: " << (kk == bb)  << endl;
       }
     }
-    //cout << segmentSize << endl;
-    uint64_t xxx = 1;
-    for( ; low <= end; low += segmentSize) {
-      fill(sieve.begin(), sieve.end(), true);
-      uint64_t high = min(low + segmentSize - 1, end);
-      for (uint32_t i = 0; i < primes.size(); i++)
-	{
-	  uint64_t j = indexes[i];
-	  for (int64_t k = (primes[i] * 10); j < segmentSize; j += k)
-	    sieve[j] = false;
-	  indexes[i] = j - segmentSize;
-	}
-      for (; n <= high; n += 2)
-	if (sieve[n - low]) // n is a prime
-	  cout << n << " ";
-      //xxx++;
-    }
-    //cout << xxx << endl;
+
   }
   void seiveThreadSingle(uint64_t p, uint32_t t) {
     //used last prime to avoid conflict
@@ -143,12 +105,10 @@ public:
     }
   }
   void seiveSingle() {
-    // get rid of all even numbers
-    for(int i = 4; i <= seiveSize; i+=2) { 
+    for(int i = 4; i <= seiveSize; i+=2) { // get rid of all even numbers
       *(seive + i) = 0;
     }
-    // just check the odd numbers
-    for(int i = 3; i <= seiveSize; i+=2) { 
+    for(int i = 3; i <= seiveSize; i+=2) { // just check the odd numbers
       if(*(seive + i)) {
         int next = i << 1; // this is i * 2
 	for(int j = i * i; j <= seiveSize; j += next) {

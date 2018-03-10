@@ -12,6 +12,7 @@ private:
   uint32_t seiveSize;
   uint32_t count;
   uint64_t start, end;
+  bool* primeCheck;
   // vector<uint64_t> prime;
   uint64_t findMinIndex(uint64_t index, uint64_t ss) {
     uint64_t n = index * index;
@@ -41,11 +42,11 @@ private:
       n += (digit <= 1) ? 1 - digit : 11 - digit;
       break;
     }
-    return n;
+    return n * p;
   }
   bool findLowerBoundary(uint64_t& index) {
     if(index < 100000) return false;
-    cout << index << endl;
+    //cout << index << endl;
     uint64_t temp = index, prefix = 0;
     int a = 0, i = 0;
     while(temp > 0) {
@@ -63,6 +64,16 @@ private:
     index = (prefix + 1) * zeros + 7;
     return true;
   }
+  bool findDigitPrime(uint64_t n) {
+    uint32_t x = 0;
+    while(n != 0) {
+      uint32_t digit = n % 10;
+      n /= 10;
+      if(digit == 2) return false;
+      x += digit;
+    }
+    return primeCheck[x];
+  }
 public:
   Prime(uint64_t start, uint64_t end): start(start), end(end) {
     count = 0;
@@ -74,6 +85,10 @@ public:
     for(int i = 2; i < seiveSize; i++) {
       *(seive + i) = 1;
     }
+    primeCheck = new bool[144];
+    for(int i = 0; i < 144; i++) primeCheck[i] = false;
+    int a[] = {7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139};
+    for(auto i : a) primeCheck[i] = true;
   }
   void seiveThread() {
     // size is for first loglogN size for thread
@@ -108,17 +123,18 @@ public:
     vector<int64_t> primes;
     vector<int64_t> indexes;
     uint64_t low = findLowerBoundary(start);
+    low += low % 10 < 7? 7 - low % 10 : 17 - low % 10;
     uint64_t n = low;
     
     for(uint64_t i = 3; i < seiveSize; i += 2) {
       if(*(seive + i)) {
 	primes.push_back(i);
-	indexes.push_back(findMinIndex(i, low) - low);
+	indexes.push_back(findMinIndex2(i, low) - low);
       }
     }
     //cout << segmentSize << endl;
     uint64_t xxx = 1;
-    for( ; low <= end; low += segmentSize) {
+    for( ; low <= end; ) {
       fill(sieve.begin(), sieve.end(), true);
       uint64_t high = min(low + segmentSize - 1, end);
       for (uint32_t i = 0; i < primes.size(); i++)
@@ -128,12 +144,20 @@ public:
 	    sieve[j] = false;
 	  indexes[i] = j - segmentSize;
 	}
-      for (; n <= high; n += 2)
-	if (sieve[n - low]) // n is a prime
+      for (; n <= high; n += 10) 
+       	if (sieve[n - low] && findDigitPrime(n)) // n is a prime
 	  cout << n << " ";
       //xxx++;
+      if(findLowerBoundary(low)) {
+	for(uint32_t i = 0; i < primes.size(); i++) {
+	  indexes[i] = findMinIndex2(primes[i], low);
+	}
+      } else {
+	low += segmentSize;
+      }
+      
     }
-    //cout << xxx << endl;
+    cout << xxx << endl;
   }
   void seiveThreadSingle(uint64_t p, uint32_t t) {
     //used last prime to avoid conflict
@@ -170,6 +194,7 @@ public:
   }
   ~Prime() {
     delete[] seive;
+    delete[] primeCheck;
   }
 };
 int count(uint64_t size) {

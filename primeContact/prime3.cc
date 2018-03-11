@@ -15,11 +15,25 @@
 
 /// Set your CPU's L1 data cache size (in bytes) here
 const int64_t L1D_CACHE_SIZE = 32768;
-
+bool* primeCheck;
+int start = 0;
 /// Generate primes using the segmented sieve of Eratosthenes.
 /// This algorithm uses O(n log log n) operations and O(sqrt(n)) space.
 /// @param limit  Sieve primes <= limit.
 ///
+bool findDigitPrime(uint64_t n) {
+  if(n < start) return false;
+  if(n % 10 != 7) return false;
+  n = n / 10;
+  uint32_t x = 7;
+  while(n != 0) {
+    uint32_t digit = n % 10;
+    n /= 10;
+    if(digit == 2) return false;
+    x += digit;
+  }
+  return primeCheck[x];
+}
 void segmented_sieve(int64_t limit)
 {
   int64_t sqrt = (int64_t) std::sqrt(limit);
@@ -70,8 +84,9 @@ void segmented_sieve(int64_t limit)
 	}
 
       for (; n <= high; n += 2)
-	if (sieve[n - low]) // n is a prime
+	if (sieve[n - low] && findDigitPrime(n)) // n is a prime
 	  count++;
+      //std::cout << n << " ";
     }
 
   std::cout << count << " primes found." << std::endl;
@@ -82,10 +97,17 @@ void segmented_sieve(int64_t limit)
 ///
 int main(int argc, char** argv)
 {
-  if (argc >= 2)
+
+  primeCheck = new bool[145];
+  for(int i = 0; i < 145; i++) primeCheck[i] = false;
+  int a[] = {7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139};
+  for(auto i : a) primeCheck[i] = true;
+  if (argc >= 2) {
+    start = std::atol(argv[1]);
     segmented_sieve(std::atol(argv[2]));
+  }
   else
     segmented_sieve(1000000000);
-
+  delete[] primeCheck;
   return 0;
 }

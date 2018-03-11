@@ -64,8 +64,6 @@ private:
     }
     if(a < 5) return false;
     uint64_t zeros = (uint64_t)(pow(10, a));
-    cout << zeros << endl;
-    cout << a << endl;
     index = (prefix + 1) * zeros + 7;
     return true;
   }
@@ -128,7 +126,7 @@ public:
     vector<char> sieve(segmentSize);
     vector<int64_t> primes;
     vector<int64_t> indexes;
-    cout << start <<endl;
+    //cout << start <<endl;
     findLowerBoundary(start);
     uint64_t low = start;
     low += low % 10 < 7? 7 - low % 10 : 17 - low % 10;
@@ -139,7 +137,7 @@ public:
 	//	cout << i << endl;
 	primes.push_back(i);
 	indexes.push_back(findMinIndex2(i, low) - low);
-	cout << i << " the index is " <<  findMinIndex2(i, low) << endl;
+	//	cout << i << " the index is " <<  findMinIndex2(i, low) << endl;
       }
     }
     //cout << n << endl;
@@ -157,8 +155,8 @@ public:
 	}
       for (; n <= high; n += 10) 
        	if (sieve[n - low] && findDigitPrime(n)) // n is a prime
-	  cout << n << " ";
-      //xxx++;
+	  // cout << n << " ";
+	  xxx++;
       if(findLowerBoundary(low)) {
 	for(uint32_t i = 0; i < primes.size(); i++) {
 	  indexes[i] = findMinIndex2(primes[i], low) - low;
@@ -248,7 +246,7 @@ int main(int args, char** arg) {
     cout << "Not a correct input!" << endl;
   }
   if(test == 0) {
-    cout << start << endl;
+    // cout << start << endl;
     Prime p(start, end);
     p.seiveThread();
     //cout << p.countP() << endl;

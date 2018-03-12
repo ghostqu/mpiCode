@@ -38,7 +38,7 @@ void segmented_sieve(int64_t limit)
 {
   int64_t sqrt = (int64_t) std::sqrt(limit);
   int64_t segment_size = std::max(sqrt, L1D_CACHE_SIZE);
-  int64_t count = (limit < 2) ? 0 : 1;
+  int64_t count = 0;
 
   // we sieve primes >= 3
   int64_t i = 3;

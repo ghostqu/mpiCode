@@ -13,7 +13,7 @@ private:
   // size of the first sieve, should be sqrt(high)
   uint32_t seiveSize;
   // the total number of primes
-  uint32_t count[2] = {0};
+  uint32_t count;
   // the range 
   uint64_t start, end;
   // the fist 144 primes
@@ -86,7 +86,7 @@ private:
 public:
   Prime(uint64_t start, uint64_t end): start(start), end(end) {
     
-    // count = 0;
+    count = 0;
     
     seiveSize = (uint32_t)(sqrt(end)) + 1;
     //cout << "size " << seiveSize << endl;;
@@ -108,7 +108,7 @@ public:
     const uint64_t size = (uint32_t)(sqrt(seiveSize)) + 1;
     //get rid of all even numbers
     /*
-      for(uint32_t i = 4; i <= seiveSize; i+=2) {
+    for(uint32_t i = 4; i <= seiveSize; i+=2) {
       *(seive + i) = 0;
       }*/
     //get first loglogN array for thread
@@ -133,43 +133,30 @@ public:
       v[1].join();     
     }
     seive[5] = 0;
-    findLowerBoundary(start);
-    uint64_t rangeStart = start;
-    uint64_t rangeMid = start + (end - start)/2;
-    uint64_t rangeEnd = end;
-    //int res[2] = {0};
-    //cout << rangeStart << " " << rangeMid << " " << rangeEnd << endl;
-    thread t[2];
-    t[0] = thread(&Prime::threadSecond, this, rangeStart, rangeMid, 0);
-    t[1] = thread(&Prime::threadSecond, this, rangeMid + 1, rangeEnd, 1);
-    t[0].join();
-    t[1].join();
-    cout << "The amount of primes is " << count[0] + count[1] << endl;
-  }
-  void threadSecond(uint64_t s, uint64_t e, int x) {
     uint64_t segmentSize = seiveSize < L1D_CACHE_SIZE? seiveSize : L1D_CACHE_SIZE;
     vector<char> sieve(segmentSize);
     vector<int64_t> primes;
     vector<int64_t> indexes;
     //cout << start <<endl;
-    findLowerBoundary(s);
-    uint64_t low = s;
+    findLowerBoundary(start);
+    uint64_t low = start;
     low += low % 10 < 7? 7 - low % 10 : 17 - low % 10;
     uint64_t n = low;
-
+    
     for(uint64_t i = 3; i < seiveSize; i += 2) {
       if(*(seive + i)) {
 	//	cout << i << endl;
 	primes.push_back(i);
 	indexes.push_back(findMinIndex2(i, low) - low);
+	//	cout << i << " the index is " <<  findMinIndex2(i, low) << endl;
       }
     }
     //cout << n << endl;
     //cout << segmentSize << endl;
-    
-    for( ; low <= e; ) {
+    uint64_t xxx = 0;
+    for( ; low <= end; ) {
       fill(sieve.begin(), sieve.end(), true);
-      uint64_t high = min(low + segmentSize - 1, e);
+      uint64_t high = min(low + segmentSize - 1, end);
       for (uint32_t i = 0; i < primes.size(); i++)
 	{
 	  uint64_t j = indexes[i];
@@ -179,8 +166,8 @@ public:
 	}
       for (; n <= high; n += 10) 
        	if (sieve[n - low] && findDigitPrime(n)) // n is a prime
-	  //	  if(x == 0) cout << n << " ";
-	  count[x]++;
+	  // cout << n << " ";
+	  xxx++;
       if(findLowerBoundary(low)) {
 	for(uint32_t i = 0; i < primes.size(); i++) {
 	  indexes[i] = findMinIndex2(primes[i], low) - low;
@@ -191,7 +178,7 @@ public:
       }
       
     }
-    //if(x == 0) cout << count[x] << endl;
+    cout << xxx << endl;
   }
   void seiveThreadSingle(uint64_t p, uint32_t t) {
     //used last prime to avoid conflict
@@ -215,10 +202,20 @@ public:
       }
     }
   }
+  int countP() {
+    for(int i = 0; i < seiveSize; i++) {
+      //cout << (int)(*(seive + i))  << " ";
+      if(*(seive + i)) {
+	//cout << i << " ";
+	count++;
+      }
+      //return count;
+    }
+    return count;
+  }
   ~Prime() {
     delete[] seive;
     delete[] primeCheck;
-    //delete[] count;
   }
 };
 int count(uint64_t size) {
@@ -266,7 +263,7 @@ int main(int args, char** arg) {
     //cout << p.countP() << endl;
     //cout << count(end) << endl;
   } else {
-    // cout << count(end) <<endl;
+    cout << count(end) <<endl;
   }
   return 0;
 }

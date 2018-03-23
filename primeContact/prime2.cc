@@ -19,20 +19,6 @@ private:
   // the fist 144 primes
   bool* primeCheck;
   
-  uint64_t findMinIndex(uint64_t index, uint64_t ss) {
-    uint64_t n = index * index;
-    uint64_t step;
-    while(n < ss) {
-      step = index << 1;
-      while(n + step < ss) {
-	n += step;
-	step = step << 1;
-      }
-      n += (index << 1);
-    }
-    return n;
-  }
-  
   uint64_t findMinIndex2(uint64_t p, uint64_t s) {
     s = p * p > s ? p * p : s;
     uint64_t n = (s + p - 1) / p;
@@ -106,11 +92,6 @@ public:
   void seiveThread() {
     // size is for first loglogN size for thread
     const uint64_t size = (uint32_t)(sqrt(seiveSize)) + 1;
-    //get rid of all even numbers
-    /*
-      for(uint32_t i = 4; i <= seiveSize; i+=2) {
-      *(seive + i) = 0;
-      }*/
     //get first loglogN array for thread
     for(uint32_t i = 3; i <= size; i+=2) {
       if(*(seive + i)) {
@@ -137,8 +118,6 @@ public:
     uint64_t rangeStart = start;
     uint64_t rangeMid = start + (end - start)/2;
     uint64_t rangeEnd = end;
-    //int res[2] = {0};
-    //cout << rangeStart << " " << rangeMid << " " << rangeEnd << endl;
     thread t[2];
     t[0] = thread(&Prime::threadSecond, this, rangeStart, rangeMid, 0);
     t[1] = thread(&Prime::threadSecond, this, rangeMid + 1, rangeEnd, 1);
@@ -151,7 +130,6 @@ public:
     vector<char> sieve(segmentSize);
     vector<int64_t> primes;
     vector<int64_t> indexes;
-    //cout << start <<endl;
     findLowerBoundary(s);
     uint64_t low = s;
     low += low % 10 < 7? 7 - low % 10 : 17 - low % 10;
@@ -159,13 +137,10 @@ public:
 
     for(uint64_t i = 3; i < seiveSize; i += 2) {
       if(*(seive + i)) {
-	//	cout << i << endl;
 	primes.push_back(i);
 	indexes.push_back(findMinIndex2(i, low) - low);
       }
     }
-    //cout << n << endl;
-    //cout << segmentSize << endl;
     
     for( ; low <= e; ) {
       fill(sieve.begin(), sieve.end(), true);
@@ -200,21 +175,6 @@ public:
       *(seive + i) = 0;
     }
   }
-  void seiveSingle() {
-    // get rid of all even numbers
-    for(int i = 4; i <= seiveSize; i+=2) { 
-      *(seive + i) = 0;
-    }
-    // just check the odd numbers
-    for(int i = 3; i <= seiveSize; i+=2) { 
-      if(*(seive + i)) {
-        int next = i << 1; // this is i * 2
-	for(int j = i * i; j <= seiveSize; j += next) {
-          *(seive + j) = 0;
-        }
-      }
-    }
-  }
   ~Prime() {
     delete[] seive;
     delete[] primeCheck;
@@ -247,27 +207,10 @@ int count(uint64_t size) {
 int main(int args, char** arg) {
   uint64_t start = 0;
   uint64_t end = 0;
-  int test = 0;
-  if(args == 2) {
-    end = atol(arg[1]);
-  } else if(args == 3) {
-    start = atol(arg[1]);
-    end = atol(arg[2]);
-  } else {
-    start = atol(arg[1]);
-    end = atol(arg[2]);
-    test = atoi(arg[3]);
-   
-  }
-  if(test == 0) {
-    // cout << start << endl;
-    Prime p(start, end);
-    p.seiveThread();
-    //cout << p.countP() << endl;
-    //cout << count(end) << endl;
-  } else {
-    // cout << count(end) <<endl;
-  }
+  start = atol(arg[1]);
+  end = atol(arg[2]);
+  Prime p(start, end);
+  p.seiveThread();
   return 0;
 }
 
